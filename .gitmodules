@@ -1,0 +1,3 @@
+[submodule "packages/meteor-phaser"]
+	path = packages/meteor-phaser
+	url = https://github.com/thinkong/meteor-phaser.git
