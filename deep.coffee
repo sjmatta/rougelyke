@@ -4,6 +4,16 @@ Actors = new Mongo.Collection 'Actors'
 rows = 20
 cols = 40
 
+Meteor.methods
+  movePlayer: (id, row, col) ->
+    actor = Actors.findOne { id: id }
+    room = Rooms.findOne { id: actor.room }
+    canMove = (actor, row, col) -> 
+      newTile = room?.map[row]?[col]
+      return true if newTile? and newTile != '#'
+    if canMove(actor, actor.row + row, actor.col + col)
+      Actors.update(actor._id, $set: { row: actor.row += row, col: actor.col += col })
+
 if Meteor.isClient
   # Meteor.subscribe 'Rooms'
 
@@ -21,25 +31,16 @@ if Meteor.isClient
   addText = (row, col, chr) -> game.add.text(getX(col), getY(row), chr, style)
   initMap = (map) -> addText(row_i, col_i, chr) for chr in col for col, col_i in row for row, row_i in map
   initActors = (actors) -> actor.sprite = addText(actor.row, actor.col, actor.chr) for actor in actors
-  canMove = (actor, row, col) -> 
-    newTile = room.map[row]?[col]
-    return true if newTile? and newTile != '#'
-
+  
   drawActors = () ->
     Tracker.autorun () ->
-      console.log 'autorun'
       Actors.find({ room: room.id }).forEach (sActor) ->
-        console.log 'drawActors'
         actor = _.findWhere(actors, { id: sActor.id })
         [actor.row, actor.col, actor.chr] = [sActor.row, sActor.col, sActor.chr]
         [actor.sprite.x, actor.sprite.y] = [getX(actor.col), getY(actor.row)]
 
   handleKeyPress = (event) ->
-    move = (actor, row, col) ->
-      if canMove(actor, actor.row + row, actor.col + col)
-        actor.row += row
-        actor.col += col
-        Actors.update(actor._id, $set: { row: actor.row, col: actor.col })
+    move = (actor, row, col) -> Meteor.call('movePlayer', player.id, row, col)
     switch event.keyCode
       when Phaser.Keyboard.UP then move(player, -1,  0)
       when Phaser.Keyboard.DOWN then move(player,  1,  0)
@@ -47,10 +48,9 @@ if Meteor.isClient
       when Phaser.Keyboard.RIGHT then move(player,  0,  1)
 
   mainState =
-    preload: () -> console.log 'preload'
+    preload: () ->
     create: () ->
       player = Actors.findOne { id: 1 }
-      console.log player
       game.input.keyboard.addCallbacks(null, handleKeyPress)
       initMap room.map
       initActors [player]
