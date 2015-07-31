@@ -5,10 +5,9 @@
 # but you can also edit it by hand.
 
 meteor-platform
-insecure
-coffeescript
 underscore
-autopublish
 accounts-google
 accounts-ui
 deanius:promise
+grigio:babel
+autopublish
