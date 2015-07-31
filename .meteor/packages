@@ -9,3 +9,6 @@ insecure
 coffeescript
 underscore
 autopublish
+accounts-google
+accounts-ui
+deanius:promise
